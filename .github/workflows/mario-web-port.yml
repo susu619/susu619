@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/mario-web-multiplayer-port
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -42,6 +45,7 @@ jobs:
         run: npm run build
 
       - name: Commit reproducible import
+        if: github.event_name == 'push'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
