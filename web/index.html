@@ -60,5 +60,13 @@
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const server = document.querySelector('#server');
+        if (!server || location.port !== '5173') return;
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        server.value = `${protocol}//${location.hostname || 'localhost'}:8080`;
+      });
+    </script>
   </body>
 </html>
