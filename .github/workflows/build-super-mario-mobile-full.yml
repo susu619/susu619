@@ -1,0 +1,156 @@
+name: Build complete Super Mario mobile package
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-full-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout build inputs
+        uses: actions/checkout@v4
+
+      - name: Reassemble and verify port overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat \
+            tmp-super-mario-build/overlay.part01.b64 \
+            tmp-super-mario-build/overlay.p02a.b64 \
+            tmp-super-mario-build/overlay.p02b.b64 \
+            tmp-super-mario-build/overlay.p03a.b64 \
+            tmp-super-mario-build/overlay.p03b.b64 \
+            tmp-super-mario-build/overlay.p04a.b64 \
+            tmp-super-mario-build/overlay.p04b.b64 \
+            > mobile-overlay.tar.gz.b64
+          base64 --decode mobile-overlay.tar.gz.b64 > mobile-overlay.tar.gz
+          echo '257f8827e604f4a91001c5ec5ccaad2b28ded925f1428e217f4e98e4e77e8fa4  mobile-overlay.tar.gz' | sha256sum -c -
+          tar -tzf mobile-overlay.tar.gz >/dev/null
+
+      - name: Clone the complete upstream repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/hhzzcc/super-mario.git super-mario-mobile-full-v1
+          cd super-mario-mobile-full-v1
+          git checkout 3c037e7acc57aa29101533dd40cf155803e74e6f
+          printf '%s\n' '3c037e7acc57aa29101533dd40cf155803e74e6f' > UPSTREAM_COMMIT.txt
+          mv README.md README_UPSTREAM.md
+          rm -rf .git
+
+      - name: Apply mobile browser, Termux and Debian server port
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xzf mobile-overlay.tar.gz -C super-mario-mobile-full-v1
+          chmod +x super-mario-mobile-full-v1/*.sh
+          test -f super-mario-mobile-full-v1/src/maps/map1.js
+          test -f super-mario-mobile-full-v1/src/maps/map2.js
+          test -f super-mario-mobile-full-v1/src/maps/map3.js
+          test -d super-mario-mobile-full-v1/public/imgs
+          test -f super-mario-mobile-full-v1/server/index.js
+          test -f super-mario-mobile-full-v1/install-termux.sh
+          test -f super-mario-mobile-full-v1/install-debian.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies and build browser client
+        working-directory: super-mario-mobile-full-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --legacy-peer-deps --no-audit --no-fund
+          npm run build
+          test -f dist/index.html
+
+      - name: Validate server and built website
+        working-directory: super-mario-mobile-full-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check server/index.js
+          node --check server/healthcheck.js
+          PORT=18080 HOST=127.0.0.1 node server/index.js > /tmp/super-mario-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          success=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18080/healthz > /tmp/health.json; then
+              success=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [ "$success" -ne 1 ]; then
+            cat /tmp/super-mario-server.log
+            exit 1
+          fi
+          cat /tmp/health.json
+          grep -q '"ok":true' /tmp/health.json
+          curl --fail --silent http://127.0.0.1:18080/ > /tmp/index.html
+          grep -qi '<!doctype html' /tmp/index.html
+
+      - name: Generate full-package inventory
+        working-directory: super-mario-mobile-full-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf node_modules
+          file_count=$(find . -type f | wc -l | tr -d ' ')
+          source_count=$(find src -type f | wc -l | tr -d ' ')
+          image_count=$(find public/imgs -type f | wc -l | tr -d ' ')
+          source_bytes=$(du -sb . | awk '{print $1}')
+          dist_bytes=$(du -sb dist | awk '{print $1}')
+          {
+            echo 'package=super-mario-mobile-full-v1'
+            echo 'upstream_repository=hhzzcc/super-mario'
+            echo 'upstream_commit=3c037e7acc57aa29101533dd40cf155803e74e6f'
+            echo "full_file_count=$file_count"
+            echo "source_file_count=$source_count"
+            echo "public_image_count=$image_count"
+            echo "unpacked_bytes=$source_bytes"
+            echo "dist_bytes=$dist_bytes"
+            echo 'includes_full_src=true'
+            echo 'includes_full_public_imgs=true'
+            echo 'includes_three_maps=true'
+            echo 'includes_built_dist=true'
+            echo 'includes_termux_server=true'
+            echo 'includes_debian_server=true'
+            echo 'includes_websocket_rooms=true'
+          } > BUILD_INFO.txt
+          find . -type f ! -name FULL_FILE_MANIFEST.sha256 -print0 | sort -z | xargs -0 sha256sum > FULL_FILE_MANIFEST.sha256
+          cat BUILD_INFO.txt
+
+      - name: Package complete source, assets and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -qr super-mario-mobile-full-v1.zip super-mario-mobile-full-v1
+          tar -czf super-mario-mobile-full-v1.tar.gz super-mario-mobile-full-v1
+          unzip -t super-mario-mobile-full-v1.zip >/dev/null
+          tar -tzf super-mario-mobile-full-v1.tar.gz >/dev/null
+          sha256sum super-mario-mobile-full-v1.zip super-mario-mobile-full-v1.tar.gz > super-mario-mobile-full-v1-SHA256.txt
+          ls -lh super-mario-mobile-full-v1.zip super-mario-mobile-full-v1.tar.gz
+
+      - name: Upload complete packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: super-mario-mobile-full-v1
+          path: |
+            super-mario-mobile-full-v1.zip
+            super-mario-mobile-full-v1.tar.gz
+            super-mario-mobile-full-v1-SHA256.txt
+            super-mario-mobile-full-v1/BUILD_INFO.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 3
