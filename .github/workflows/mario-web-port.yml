@@ -1,0 +1,58 @@
+name: Mario web port
+
+on:
+  push:
+    branches:
+      - agent/mario-web-multiplayer-port
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mario-web-port-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  import-test-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Import pinned upstream source and assets
+        run: bash tools/import-upstream.sh
+
+      - name: Install workspace dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build browser client
+        run: npm run build
+
+      - name: Commit reproducible import
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add upstream web/public/upstream package-lock.json
+          if git diff --cached --quiet; then
+            echo "Upstream snapshot is already current."
+            exit 0
+          fi
+          git commit -m "vendor: import pinned Mario upstream snapshot"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

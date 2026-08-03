@@ -1,0 +1,10 @@
+{
+  "name": "@mario-port/shared",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "exports": {
+    ".": "./src/game.mjs"
+  }
+}
