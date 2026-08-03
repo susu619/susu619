@@ -11,7 +11,10 @@
     <main class="app">
       <header class="toolbar">
         <strong>Mario Web Multiplayer</strong>
-        <span id="status" class="status">未连接</span>
+        <div class="toolbar-actions">
+          <span id="status" class="status">未连接</span>
+          <button id="fullscreen" class="ghost-button" type="button">全屏</button>
+        </div>
       </header>
 
       <section id="lobby" class="panel lobby">
@@ -22,6 +25,15 @@
         <label>
           房间号
           <input id="room" maxlength="16" value="PUBLIC" autocapitalize="characters" />
+        </label>
+        <label>
+          原版关卡
+          <select id="level">
+            <option value="1-1">1-1</option>
+            <option value="1-2">1-2</option>
+            <option value="1-3">1-3</option>
+            <option value="1-4">1-4</option>
+          </select>
         </label>
         <label>
           服务器
@@ -36,10 +48,12 @@
         <div class="touch-controls" aria-label="触控操作">
           <div class="touch-left">
             <button data-control="left" aria-label="向左">◀</button>
+            <button data-control="down" aria-label="下蹲">▼</button>
             <button data-control="right" aria-label="向右">▶</button>
           </div>
           <div class="touch-right">
             <button data-control="run" aria-label="冲刺">Z</button>
+            <button data-control="fire" aria-label="火球">C</button>
             <button data-control="jump" aria-label="跳跃">X</button>
           </div>
         </div>
