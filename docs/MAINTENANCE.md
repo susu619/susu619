@@ -19,4 +19,8 @@ Before publishing this source snapshot, the project was re-audited rather than u
 
 Ajv/Matter dependency-backed tests require `npm ci`; unavailable dependencies are never relabeled as passed.
 
+### GitHub Actions infrastructure status
+
+The first public-source PR correctly triggered the repository workflows, but GitHub did not start any runner steps. GitHub's check annotation reported: `The job was not started because your account is locked due to a billing issue.` Therefore the red check is recorded as an account/infrastructure block, **not** as a failed project test and **not** as passing CI. Local audit results remain separate from GitHub-hosted CI status until the account-side Actions block is resolved.
+
 Every meaningful code/content change should include a regression or update an existing invariant. Test failures are fixed at source; historical assertions are not weakened merely to make a new release green.
