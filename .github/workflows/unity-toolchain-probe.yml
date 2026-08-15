@@ -1,0 +1,27 @@
+name: Unity toolchain public-binary probe
+
+on:
+  push:
+    branches:
+      - unity-toolchain-fetch-6000-3-10f1
+    paths:
+      - '.github/workflows/unity-toolchain-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe official Unity 6000.3.10f1 public binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          editor='https://download.unity3d.com/download_unity/e35f0c77bd8e/LinuxEditorInstaller/Unity-6000.3.10f1.tar.xz'
+          webgl='https://download.unity3d.com/download_unity/e35f0c77bd8e/LinuxEditorTargetInstaller/UnitySetup-WebGL-Support-for-Editor-6000.3.10f1.tar.xz'
+          echo 'EDITOR'
+          curl -fsSIL "$editor" | grep -iE '^(HTTP/|content-length:|content-type:)' | tail -10
+          echo 'WEBGL'
+          curl -fsSIL "$webgl" | grep -iE '^(HTTP/|content-length:|content-type:)' | tail -10
