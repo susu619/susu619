@@ -25,3 +25,4 @@ jobs:
           curl -fsSIL "$editor" | grep -iE '^(HTTP/|content-length:|content-type:)' | tail -10
           echo 'WEBGL'
           curl -fsSIL "$webgl" | grep -iE '^(HTTP/|content-length:|content-type:)' | tail -10
+          echo PROBE_OK
