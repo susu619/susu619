@@ -1,0 +1,31 @@
+name: quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audited-public-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Syntax check audited public core
+        run: |
+          node --check apps/client/public/src/network.mjs
+          node --check apps/client/public/sw.js
+          node --check packages/sim-core/kernel/constants.mjs
+          node --check packages/sim-core/mounts/mount-system.mjs
+          node --check tests/maintenance-audit-3.8.0.mjs
+      - name: Maintenance regression
+        run: npm run test:maintenance-audit
