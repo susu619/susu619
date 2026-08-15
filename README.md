@@ -5,69 +5,72 @@
 [![Room](https://img.shields.io/badge/multiplayer-up%20to%207-orange)](./docs/ARCHITECTURE.md)
 [![Maintenance](https://img.shields.io/badge/maintenance-continuous-8250df)](./docs/MAINTENANCE.md)
 
-> 一个持续维护中的 HTML5 / Canvas 多人平台动作游戏与实时同步实验项目。重点不是复刻原作，而是研究 **60Hz 权威模拟、移动端触控、多人协作物理、确定性世界状态、A/B 发布与持续可玩性验证**。
+> 一个持续维护中的 HTML5 / Canvas 多人平台动作游戏与实时同步工程项目，重点研究高频权威模拟、移动端交互、多人协作物理、确定性世界状态、可靠发布和可玩性验证。
 
 ## 项目状态
 
 **Active Development / 持续维护中。**
 
-当前公开仓库以经过维护审计的 `3.8.x` 引擎基线为起点；`3.9` 世界重制（天宫 / 地狱）仍处于开发阶段，**未达到可玩性标准前不会作为正式版本发布**。
+当前公开仓库以经过维护审计的 `3.8.x` 引擎基线为起点；`3.9` 世界重制仍处于开发阶段。天宫与地狱在关卡节奏、逻辑、视觉、怪物生态、Boss、机关和完整跑图没有达到发布标准之前，不进入正式 Release。
 
 - Maintainer / 维护者：**susu6019**
-- GitHub account / GitHub 账号：**[@susu619](https://github.com/susu619)**
-- ChatGPT account email / ChatGPT 账号邮箱：**待维护者填写准确的 ChatGPT 绑定邮箱后公开或提交申请**
-- Maintenance mode：长期维护、持续回归、A/B Trial 后人工验收
+- GitHub：**[@susu619](https://github.com/susu619)**
+- Maintenance：长期维护、持续回归、人工验收、A/B Trial / Promote / Rollback
 
-> OpenAI 的 Codex for Open Source 申请要求填写与 ChatGPT 账号关联的真实邮箱；本仓库不会猜测或伪造该字段。
+## 项目方向
 
-## 为什么做这个项目
+这个项目已经从单机浏览器平台游戏逐步演化为一个完整的实时游戏工程实验场：
 
-这个项目从一个浏览器平台游戏逐步演化成一个完整的实时游戏工程实验场：
+1. **60Hz 权威模拟** — 服务端固定步长更新世界状态，客户端以 60FPS 为目标维持流畅呈现。
+2. **多人同步** — 最多 7 人同房，包含远端插值、有限外推、本地输入 reconciliation、共享敌人权威和玩家协作碰撞。
+3. **移动端优先** — 实体触控摇杆、按钮布局、触觉反馈、安全区适配和移动端渲染预算。
+4. **确定性世界** — 状态哈希、网络快照、世界图指纹与兼容性门禁用于发现不可重复或不可恢复的状态错误。
+5. **安全发布** — A/B Trial、Promote、Rollback 和版本兼容策略降低在线更新风险。
+6. **真实可玩性验证** — 不只验证数据文件存在，还验证路线可达、奖励可获取、碰撞可见、转场安全、敌人出生合理和完整物理跑图。
 
-1. **60Hz 游戏模拟**：客户端保持 60FPS 目标，服务端权威模拟保持 60Hz。
-2. **多人同步**：最多 7 人同房，包含远端插值、有限外推、输入 reconciliation、共享敌人权威和协作碰撞。
-3. **移动端优先**：实体触控摇杆、可拖拽布局、UI 皮肤、触觉反馈与移动端合成预算。
-4. **确定性与回滚**：固定点状态、状态哈希、网络快照、世界图指纹、A/B Trial/Promote/Rollback。
-5. **持续可玩性门禁**：不仅检查 JSON 是否存在，还检查路线可达、奖励可拿、敌人有支撑面、管道出口安全、碰撞可见。
-6. **实验玩法**：冰冻领域、重力机制、动态世界、多人踩头/叠罗汉、Boss 与区域事件。
-
-## 核心特性
+## 核心能力
 
 ### 实时多人
-- 服务端权威 60Hz simulation
+
+- 服务器权威 60Hz simulation
 - 7 人房间硬上限
-- 共享玩家 / 敌人 / 载具状态
-- 客户端远端插值与有限外推
-- 本地输入 reconciliation（最多 24 条未确认输入）
+- 玩家、敌人、载具与动态世界共享状态
+- 远端角色插值与有限外推
+- 本地输入 reconciliation，限制未确认输入窗口
 - RTT / jitter / main-thread scheduling 诊断
+- 房间级协作碰撞、踩头与多人叠加玩法
 
 ### 移动端控制
+
 - 实体触控摇杆与操作按钮
 - 五套控制 UI 风格
-- 控件大小与位置自定义
-- 按压形变、回弹、触点 FX 与振动反馈
+- 控件大小和位置自定义
+- 按压反馈、触点特效和振动反馈
 - 横屏沉浸模式与安全区适配
+- HUD 与渲染更新预算分离
 
 ### 世界与玩法
+
 - 多区域 World Graph
 - 管道与区域转场
-- 安全复活 / checkpoint
-- 冰冻领域：冻结敌人仍保留实体 hitbox，可踩头、可攻击
-- 龙坐骑（乌龟坐骑已从生产逻辑移除）
+- checkpoint / 安全复活
+- 冰冻领域与实体冻结碰撞
+- 重力玩法与动态世界事件
 - 服务器权威 Boss / 敌人生命周期
+- 管理员世界规则与活动调度能力持续开发中
 
 ## 架构概览
 
 ```text
 Browser / Mobile
    │
-   ├── Canvas2D / WebGL2 Renderer
+   ├── Renderer
    ├── Input + Reconciliation
    ├── Remote Avatar Interpolation
    │
 Gateway API ───────── Realtime WebSocket
    │                         │
-   └──── SQLite / Session    └── 60Hz RoomClock
+   └──── Session             └── 60Hz RoomClock
                                   │
                                   ├── Shared Player Authority
                                   ├── Shared Enemy Authority
@@ -75,18 +78,19 @@ Gateway API ───────── Realtime WebSocket
                                   └── Deterministic Sim Core
 ```
 
-详细见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+详细设计见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
 
-## 质量门禁
+## 当前质量基线
 
-上传公开仓库前进行了一轮维护审计：
+公开基线在上传前重新进行过维护审计，而不是直接复制旧压缩包：
 
 - 95 / 95 个当前环境可执行的独立门禁通过
-- 双客户端 integration 连续多轮通过，P95 Tick 约 1.8–2.1ms（审计环境）
+- 多轮双客户端 integration 满足服务器 Tick 预算
 - 2400 Tick 确定性模拟通过
-- 修复会话过期校验、重连 timer 复用、WebSocket URL 查询参数、握手超时竞态、坐骑拾取复活边界等维护 Bug
+- 已修复会话过期校验、重连 timer 复用、WebSocket URL 参数拼接、握手超时竞态、坐骑复活边界等逻辑问题
+- 对不可用的外部依赖测试明确标记环境限制，不把未执行测试写成通过
 
-完整说明见 [docs/MAINTENANCE.md](./docs/MAINTENANCE.md)。
+完整记录见 [docs/MAINTENANCE.md](./docs/MAINTENANCE.md)。
 
 ## 本地开发
 
@@ -95,7 +99,7 @@ npm ci
 npm run start:local
 ```
 
-核心测试：
+常用验证：
 
 ```bash
 npm run test:sim
@@ -105,27 +109,45 @@ npm run audit:collisions
 npm run test:maintenance-audit
 ```
 
-## 资产政策
+## 3.9 世界重制
 
-本公开仓库**不分发许可不明确的 Nintendo / Mario / Luigi / Peach / Doraemon 等角色或音频素材**。CC0 或明确许可素材保留来源说明。
+下一阶段的核心不是继续增加版本号，而是把天宫与地狱做成真正完整的游戏区域。
 
-详见 [docs/ASSET_POLICY.md](./docs/ASSET_POLICY.md)。
+发布前必须同时满足：
 
-## 路线图
+- 从正常入口开始能够完整物理跑通，不依赖测试传送或坐标改写
+- 无断路、空气墙、错误坡面、不可达平台和异常转场
+- 天宫与地狱拥有独立的地形语言、环境事件和战斗节奏
+- 怪物拥有可辨认的行为逻辑，而不是单纯换皮追踪
+- 机关状态、伤害预警、Boss 门禁和复活逻辑与视觉表现一致
+- 实际运行画面达到完整关卡而非原型占位质量
+- 移动端与多人模式回归不因世界扩展发生性能退化
 
-当前重点不是堆版本号，而是把下一阶段的天宫 / 地狱做成真正值得发布的完整区域：关卡节奏、视觉层次、怪物生态、Boss、机关、无空气墙、无断路、真实跑图全部达标之后才发布。
+详细计划见 [ROADMAP.md](./ROADMAP.md)。
 
-见 [ROADMAP.md](./ROADMAP.md)。
+## 贡献
 
-## Codex for Open Source
+欢迎针对以下方向提交可复现的问题、测试和改进：
 
-计划使用这个仓库申请 OpenAI **Codex for Open Source**。申请材料不夸大使用量，也不伪造维护记录；重点展示真实的持续维护责任：代码审查、Issue triage、回归测试、发布管理、性能和兼容性治理。
+- 网络同步与预测
+- 确定性模拟
+- 移动端性能
+- 关卡可达性与碰撞
+- 怪物 AI 与 Boss 逻辑
+- 世界事件与多人协作玩法
+- 构建、部署和回滚可靠性
 
-申请准备见 [docs/CODEX_OSS_APPLICATION.md](./docs/CODEX_OSS_APPLICATION.md)。
+贡献流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+
+## 资产与版权边界
+
+公开仓库不分发许可不明确的商业角色图片、音频或私人研究素材。第三方素材只有在来源和许可明确时才进入公开树；新贡献优先使用原创、CC0、CC-BY 或其他允许再分发的资源。
+
+详见 [docs/ASSET_POLICY.md](./docs/ASSET_POLICY.md) 和 [NOTICE.md](./NOTICE.md)。
 
 ## License
 
-项目原创代码按 [LICENSE](./LICENSE) 许可。第三方内容与例外项以 [NOTICE.md](./NOTICE.md) 和各自来源文件为准。
+项目原创代码按 [LICENSE](./LICENSE) 许可。第三方内容与例外项以 [NOTICE.md](./NOTICE.md) 以及各资源目录中的来源说明为准。
 
 ---
 
