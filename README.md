@@ -2,7 +2,7 @@
 
 [![Status](https://img.shields.io/badge/status-active%20development-2ea44f)](./ROADMAP.md)
 [![Simulation](https://img.shields.io/badge/simulation-60%20Hz-0969da)](./docs/ARCHITECTURE.md)
-[![Room](https://img.shields.io/badge/multiplayer-up%20to%207-orange)](./docs/ARCHITECTURE.md)
+[![Multiplayer](https://img.shields.io/badge/multiplayer-configurable-orange)](./docs/ARCHITECTURE.md)
 [![Maintenance](https://img.shields.io/badge/maintenance-continuous-8250df)](./docs/MAINTENANCE.md)
 
 > 一个持续维护中的 HTML5 / Canvas 多人平台动作游戏与实时同步工程项目，重点研究高频权威模拟、移动端交互、多人协作物理、确定性世界状态、可靠发布和可玩性验证。
@@ -22,7 +22,7 @@
 这个项目已经从单机浏览器平台游戏逐步演化为一个完整的实时游戏工程实验场：
 
 1. **60Hz 权威模拟** — 服务端固定步长更新世界状态，客户端以 60FPS 为目标维持流畅呈现。
-2. **多人同步** — 最多 7 人同房，包含远端插值、有限外推、本地输入 reconciliation、共享敌人权威和玩家协作碰撞。
+2. **可配置多人同步** — 房间容量不是写死的产品常数。实际并发能力由服务器 CPU 单核性能、核心数与并行模型、Tick 预算、内存、带宽、快照频率、房间数量以及实体/碰撞复杂度共同决定。每个部署档位都应通过独立压力测试后再设定容量上限。
 3. **移动端优先** — 实体触控摇杆、按钮布局、触觉反馈、安全区适配和移动端渲染预算。
 4. **确定性世界** — 状态哈希、网络快照、世界图指纹与兼容性门禁用于发现不可重复或不可恢复的状态错误。
 5. **安全发布** — A/B Trial、Promote、Rollback 和版本兼容策略降低在线更新风险。
@@ -32,13 +32,28 @@
 
 ### 实时多人
 
-- 服务器权威 60Hz simulation
-- 7 人房间硬上限
+- 服务端权威固定步长 simulation
+- 房间容量由部署配置与实际压测结果决定，而不是引擎级硬编码宣传值
+- 支持按服务器资源设定房间容量、房间数量、广播频率与性能预算
 - 玩家、敌人、载具与动态世界共享状态
 - 远端角色插值与有限外推
 - 本地输入 reconciliation，限制未确认输入窗口
 - RTT / jitter / main-thread scheduling 诊断
 - 房间级协作碰撞、踩头与多人叠加玩法
+
+### 容量与扩展原则
+
+多人容量必须以**测量结果**而不是固定口号为准。主要约束包括：
+
+- CPU 单核性能与单 Tick 最坏执行时间
+- CPU 核心数、线程模型以及多房间之间能否有效并行
+- 玩家、敌人、机关、投射物和动态碰撞体数量
+- 网络上行/下行带宽、RTT、抖动与丢包
+- 快照频率、增量同步策略和单次快照大小
+- 可用内存、GC 压力与连接缓冲区
+- 同机房间数量与后台服务负载
+
+因此，任何具体人数都只能表示某个硬件与配置组合下的**已验证部署档位**，不能代表整个引擎的永久上限。
 
 ### 移动端控制
 
@@ -56,7 +71,7 @@
 - checkpoint / 安全复活
 - 冰冻领域与实体冻结碰撞
 - 重力玩法与动态世界事件
-- 服务器权威 Boss / 敌人生命周期
+- 服务端权威 Boss / 敌人生命周期
 - 管理员世界规则与活动调度能力持续开发中
 
 ## 架构概览
@@ -70,7 +85,7 @@ Browser / Mobile
    │
 Gateway API ───────── Realtime WebSocket
    │                         │
-   └──── Session             └── 60Hz RoomClock
+   └──── Session             └── Fixed-step RoomClock
                                   │
                                   ├── Shared Player Authority
                                   ├── Shared Enemy Authority
